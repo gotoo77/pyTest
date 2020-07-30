@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord.ext.commands import CommandNotFound
 from src.dicordTests.DiscordBotCmd import DiscordBotCmd
 
-TOKEN = 'NzM3OTM2OTc4NzM3MzY1MDYz.XyEnXQ.4eTnxdrJ3KkNk-IpeQ8Bt2xv4gM'
+TOKEN = 'mytoken'
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')  # define command decorator
 
