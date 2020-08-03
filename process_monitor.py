@@ -5,19 +5,19 @@ import time
 import os
 
 
-def get_size(bytes):
+def get_size(nb_bytes):
     """
     Returns size of bytes in a nice format
     """
     for unit in ['', 'K', 'M', 'G', 'T', 'P']:
-        if bytes < 1024:
-            return f"{bytes:.2f}{unit}B"
-        bytes /= 1024
+        if nb_bytes < 1024:
+            return f"{nb_bytes:.2f}{unit}B"
+        nb_bytes /= 1024
 
 
 def get_processes_info():
     # the list the contain all process dictionaries
-    processes = []
+    all_processes = []
     for process in psutil.process_iter():
         # get all process info in one shot
         with process.oneshot():
@@ -65,42 +65,43 @@ def get_processes_info():
             except psutil.AccessDenied:
                 username = "N/A"
 
-        processes.append({
+        all_processes.append({
             'pid': pid, 'name': name, 'create_time': create_time,
             'cores': cores, 'cpu_usage': cpu_usage, 'status': status, 'nice': nice,
             'memory_usage': memory_usage, 'read_bytes': read_bytes, 'write_bytes': write_bytes,
             'n_threads': n_threads, 'username': username,
         })
 
-    return processes
+    return all_processes
 
 
-def construct_dataframe(processes):
+def construct_dataframe(all_processes):
     # convert to pandas dataframe
-    df = pd.DataFrame(processes)
+    dataframe = pd.DataFrame(all_processes)
     # set the process id as index of a process
-    df.set_index('pid', inplace=True)
+    dataframe.set_index('pid', inplace=True)
     # sort rows by the column passed as argument
-    df.sort_values(sort_by, inplace=True, ascending=not descending)
+    dataframe.sort_values(sort_by, inplace=True, ascending=not descending)
     # pretty printing bytes
-    df['memory_usage'] = df['memory_usage'].apply(get_size)
-    df['write_bytes'] = df['write_bytes'].apply(get_size)
-    df['read_bytes'] = df['read_bytes'].apply(get_size)
+    dataframe['memory_usage'] = dataframe['memory_usage'].apply(get_size)
+    dataframe['write_bytes'] = dataframe['write_bytes'].apply(get_size)
+    dataframe['read_bytes'] = dataframe['read_bytes'].apply(get_size)
     # convert to proper date format
-    df['create_time'] = df['create_time'].apply(datetime.strftime, args=("%Y-%m-%d %H:%M:%S",))
+    dataframe['create_time'] = dataframe['create_time'].apply(datetime.strftime, args=("%Y-%m-%d %H:%M:%S",))
     # reorder and define used columns
-    df = df[columns.split(",")]
-    return df
+    dataframe = dataframe[columns.split(",")]
+    return dataframe
 
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Process Viewer & Monitor")
-    parser.add_argument("-c", "--columns", help="""Columns to show,
-                                                available are name,create_time,cores,cpu_usage,status,nice,memory_usage,read_bytes,write_bytes,n_threads,username.
-                                                Default is name,cpu_usage,memory_usage,read_bytes,write_bytes,status,create_time,nice,n_threads,cores.""",
-                        default="name,cpu_usage,memory_usage,read_bytes,write_bytes,status,create_time,nice,n_threads,cores")
+    parser.add_argument("-c", "--columns", help="""Columns to show, available are name,create_time,cores,cpu_usage,
+    status,nice,memory_usage,read_bytes,write_bytes,n_threads,username. Default is name,cpu_usage,memory_usage,
+    read_bytes,write_bytes,status,create_time,nice,n_threads,cores.""",
+                        default="name,cpu_usage,memory_usage,read_bytes,write_bytes,status,create_time,nice,"
+                                "n_threads,cores")
     parser.add_argument("-s", "--sort-by", dest="sort_by", help="Column to sort by, default is memory_usage .",
                         default="memory_usage")
     parser.add_argument("--descending", action="store_true", help="Whether to sort in descending order.")

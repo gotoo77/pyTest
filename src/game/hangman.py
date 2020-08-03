@@ -1,55 +1,50 @@
-import time
+import re
 import random
+import time
 
 
-def welcome():
-    # welcoming the user
-    time.sleep(0.5)
-    name = input("C est qui ton p\'tit nom? ")
-    print("OK, " + name, ", c est l\'heure du pendu...")
-    print("")
+from utils.printList import my_list_print
 
 
 class HangmanGame:
-    def __init__(self, chances, dictionary):
+    def __init__(self, chances, dictionary,verbose):
         self.nbChances = chances
         self.dictionary = dictionary
+        self.verbose = verbose
 
     def start(self):
-        # welcoming the user
-        welcome()
-
         # read dictionary of words into list
         file = open(self.dictionary)
+        # create liste of words using splitlines method prevent extra \n char at the end
         # List = open(self.dictionary).readlines()
-        List = file.read().splitlines()
+        list_of_words_from_dico = file.read().splitlines()
+        if self.verbose:
+            print('loaded dictionary contains ' + str(list_of_words_from_dico.__len__()) + " words")
 
         # set the secret
-        word = random.choice(List)
-        # print("random word form dictionary is: ", word)
+        word = random.choice(list_of_words_from_dico)
 
         # creates an variable with an empty value
-        guesses = ''
+        user_guesses = ''
         previous_wrongs = ''
 
         while self.nbChances > 0:
-            # make a counter that starts with zero
-            failed = 0
+            # count number of mismatched characters in the secret_word to guess
+            nb_mismatch_char = 0
             # for every character in secret_word
             for char in word:
-                # see if the character is in the players guess
-                if char in guesses:
-                    # print then out the character
+                if char in user_guesses:
+                    # found the character, print it
                     print(char, end=' '),
 
                 else:
-                    # if not found, print a dash
-                    print("_", end=' '),
+                    charNotFound = '_'
+                    # if not found, print
+                    print(charNotFound, end=' '),
                     # and increase the failed counter with one
-                    failed += 1
+                    nb_mismatch_char += 1
 
-                    # if failed is equal to zero, print You Won
-            if failed == 0:
+            if nb_mismatch_char == 0:
                 print("")
                 print("Bravo, quel talent !")
                 # exit the script
@@ -57,29 +52,26 @@ class HangmanGame:
 
             print()
             # ask the user go guess a character
-            guess = ""
-            while not (guess.isalpha() and len(guess) == 1):
-                guess = input("propose une lettre (1 caractere alpha) :")
-                guess = str(guess).lower()
+            user_guess = ""
+            while not (user_guess.isalpha()
+                       and re.match("^[a-z]+$", user_guess)
+                       and len(user_guess) == 1):
+                user_guess = input("propose une lettre (1 caractere alpha) :")
+                user_guess = str(user_guess).lower()
 
             # store player's guesses
-            guesses += guess
-            print("historiques des essais {", end='')
-            for g in guesses:
-                print(g + ", ", end='')
-            print("}")
+            user_guesses += user_guess
+
+            my_list_print(user_guesses, "historiques des essais")
 
             # if the guess is not found in the secret word
-            if guess not in word:
-                # self.nbChances counter decreases
+            if user_guess not in word:
+                # decreasing counter or remaining chances
                 self.nbChances -= 1
-                print("désolé, pas de '" + guess + "'!")
-                previous_wrongs += guess
+                print("désolé, pas de '" + user_guess + "'!")
+                previous_wrongs += user_guess
 
-                print("erreurs precedents=", end='')
-                for w in previous_wrongs:
-                    print("'" + w + "', ", end='')
-                print("")
+                my_list_print(previous_wrongs, "erreurs precedentes")
 
             # how many chances are left
             print(" > Il vous reste ", + self.nbChances, 'chance(s)')
